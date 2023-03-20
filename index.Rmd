@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-You like Jazz? Welcome to my corpus where I will discuss how ethnicity and gender of jazz musicians can be compared through sound. test
+You like Jazz? Welcome to my corpus where I will discuss how ethnicity and gender of jazz musicians can be compared through sound.
 
 # The different sounds of jazz {.tabset}
 
