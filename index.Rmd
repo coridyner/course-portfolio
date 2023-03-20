@@ -4,26 +4,88 @@ output:flexdashboard::flex_dashboard:
     storyboard: true
 date: "2023-02-25"
 ---
-Analysis {.storyboard}
-=========================================
 
-### Introduction
-
-test
-```{r}
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### The different sounds of jazz
+# Introduction
 
-```{r}
+You like Jazz? Welcome to my corpus where I will discuss how ethnicity and gender of jazz musicians can be compared through sound. test
+
+# The different sounds of jazz {.tabset}
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(spotifyr)
+
+herbiehancock <- get_artist_audio_features('2ZvrvbQNrHKwjT7qfGFFUW')
+herbiehancock |> ggplot(aes(x = valence, y = energy, size = loudness, color = mode)) + geom_point()
 ```
 
-### Discussion of the comparisons 
+# Discussion of the comparisons {.tabset}
 
-```{r}
+First analyzing how ethnicity affects sound by comparing Herbie Hancock's music and Frank Sinatra's
+
+## Herbie Hancock {.tabset-fade}
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+herbiehancock <-
+  get_tidy_audio_analysis('4Ce66JznW8QbeyTdSzdGwR') |> 
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+
+herbiehancock |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |> 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
 ```
-Details
-=========================================
 
-Column
------------------------------------------
+## Frank Sinatra {.tabset-fade}
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+
+franksinatra <-
+  get_tidy_audio_analysis('4beDjVImBfBTSaFM7dKNEy') |> 
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+
+franksinatra |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |> 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+```
+
+\`\`\` Details ========================================= Column -----------------------------------------
