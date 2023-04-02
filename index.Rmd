@@ -1,39 +1,86 @@
 ---
-title: "Storyboard"
-output:flexdashboard::flex_dashboard:
-    storyboard: true
-date: "2023-02-25"
+title: "Let's Talk About Jazz"
+output:
+  flexdashboard::flex_dashboard:
+     storyboard: true
 ---
 
-```{r, echo=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(ggplot2)
+library(spotifyr)
+library(compmus)
+library(plotly)
+library(gridExtra)
+library(dplyr)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
 ```
 
-# Introduction
+------------------------------------------------------------------------
 
-You like Jazz? Welcome to my corpus where I will discuss how ethnicity and gender of jazz musicians can be compared through sound.
+# Ya like jazz? 
 
-# The different sounds of jazz {.tabset}
+Welcome to my corpus where I will discuss how ethnicity and gender of jazz musicians can be compared through sound. Throughout my porfolio, I discuss four, very popular and talented musicians including Herbie Hancock, Frank Sinatra, Nina Simone, and Blossom Dearie. This lineup, although categorized under the large genre of jazz, produces very different sound, and therefore will produce exciting visualizations and information to compare.
+
+# Feeling the blues
+
+First let us look at the different sounds of jazz. Created below are four different scatterplots that examine the valence and energy from the sounds of Herbie Hancock, Frank Sinatra, Nina Simone, and Blossom Dearie. This group of musicians work with my corpus to show the similarities and differences of the sound measuring by loudness, energy, and valence based on race/ethnicity and gender. Although a bit crowded, the plots represent the artist's entire discography. I did this to help show a full comparison of the musicians. The results show that Herbie Hancock and Nina Simone, two black musicians, have a slightly higher valence to energy scale meaning that their music is overall more positive, cheerful, and happy. 
+
+### Herbie Hancock
 
 ```{r, echo=FALSE}
-library(ggplot2)
 library(tidyverse)
+library(ggplot2)
 library(spotifyr)
-
 herbiehancock <- get_artist_audio_features('2ZvrvbQNrHKwjT7qfGFFUW')
 herbiehancock |> ggplot(aes(x = valence, y = energy, size = loudness, color = mode)) + geom_point()
 ```
 
-# Discussion of the comparisons {.tabset}
-
-First analyzing how ethnicity affects sound by comparing Herbie Hancock's music and Frank Sinatra's
-
-## Herbie Hancock {.tabset-fade}
+### Frank Sinatra
 
 ```{r, echo=FALSE}
 library(tidyverse)
+library(ggplot2)
 library(spotifyr)
-library(compmus)
+
+franksinatra<- get_artist_audio_features("1Mxqyy3pSjf8kZZL4QVxS0")
+franksinatra |> ggplot(aes(x = valence, y = energy, size = loudness, color = mode)) + geom_point()
+```
+
+### Nina Simone 
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(spotifyr)
+
+ninasimone<- get_artist_audio_features("7G1GBhoKtEPnP86X2PvEYO")
+ninasimone |> ggplot(aes(x = valence, y = energy, size = loudness, color = mode)) + geom_point()
+```
+
+### Blossom Dearie
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(spotifyr)
+
+blossomdearie<- get_artist_audio_features("5bWApG9Vdshhd1J50UnNf6")
+blossomdearie |> ggplot(aes(x = valence, y = energy, size = loudness, color = mode)) + geom_point()
+```
+
+
+# Chroma comparisons
+
+First analyzing how ethnicity affects sound by comparing Herbie Hancock's music "Chameleon" and Frank Sinatra's "My Kind of Town". I picked these two songs because they reflect two different sides of jazz. Hancock tends to focus more on the instrumental side producing a beautiful sound using an array of instruments. Reflected in the chromagram, one can see that "Chameleon" is at majority a C#, G#, and A# throughout the song. Compared to Sinatra's, on the other hand, the chromagram is not as smooth looking and a higher magnitude is seen at different parts throughout the song. This is because, unlike Hancock, Sinatra uses vocals as the main draw throughout the song, staying at mainly a C pitch.
+
+### Herbie Hancock 
+
+```{r, echo=FALSE}
 
 herbiehancock <-
   get_tidy_audio_analysis('4Ce66JznW8QbeyTdSzdGwR') |> 
@@ -58,7 +105,7 @@ herbiehancock |>
   scale_fill_viridis_c()
 ```
 
-## Frank Sinatra {.tabset-fade}
+### Frank Sinatra 
 
 ```{r, echo=FALSE}
 library(tidyverse)
@@ -88,4 +135,578 @@ franksinatra |>
   scale_fill_viridis_c()
 ```
 
-\`\`\` Details ========================================= Column -----------------------------------------
+
+# Time to "reed" some timbre tunes
+Looking at the powerful and talented female musicians, I used self-similarity matrices to juxtapose Nina Simone's "Feeling Good" Blossom Dearie's "They Say It's Spring". First, looking at Simone, this song produced an interesting matrix as there is more novelty presented as these sounds are different from the rest of the song, but there is not a lot of homogeneity or variation. A little before halfway shows a bit more repetition and homogeneity, but compared to Dearie's it is very different, yet exciting to compare. "They Say It's Spring" is a lot more structured as one can see the many different blocks repeated throughout the song. In between the blocks, however, there are horizontal and vertical brighter bars presented. Looking closely, one can also see the homogeneity. These matrices are important for my corpus as they show how the different artists reflect the many kind of structure and time series presented in their songs. 
+
+### Nina Simone
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+ninasimone   <-
+  get_tidy_audio_analysis("6Rqn2GFlmvmV4w9Ala0I1e") |> 
+  compmus_align(bars, segments) |>                     
+  select(bars) |>                                     
+  unnest(bars) |>                                      
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"             
+      )
+  )
+ninasimone |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+```
+
+
+### Blossom Dearie
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+blossomdearie   <-
+  get_tidy_audio_analysis("7spdOASg2r8uR473H5zLXV") |> 
+  compmus_align(bars, segments) |>                     
+  select(bars) |>                                     
+  unnest(bars) |>                                      
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"             
+      )
+  )
+blossomdearie |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+```
+
+
+# Let's get some jazz hands for chord recognition
+Using chordograms, I have looked at all four musicians and compared their songs. Herbie Hancock's "Chameleon", Frank Sinatra's, "My Kind of Town", Nina Simone's "Feeling Good", and Blossom Dearie's "They Say It's Spring". The chordogram looks at the fundamental frequency which is typically associated with pitch. The results of my findings are fascinating. For the females, one can notice the bright colors at the end of both of their songs, which means they ended at a higher pitch rather than a lower one. Herbie Hancock tends to keep it at a higher pitch throughout the song as it is bright throughout most of the chordogram. Frank Sinatra, unlike the women, have the bright color at the beginning of the song then keeps it pretty monotone throughout the rest of the song. 
+
+### Herbie Hancock
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
+minor_chord <-
+  c(   1,    0,    0,    1,    0,    0,    0,    1,    0,    0,    0,    0)
+seventh_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0)
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:7", circshift(seventh_chord, 6),
+    "Gb:maj", circshift(major_chord, 6),
+    "Bb:min", circshift(minor_chord, 10),
+    "Db:maj", circshift(major_chord, 1),
+    "F:min", circshift(minor_chord, 5),
+    "Ab:7", circshift(seventh_chord, 8),
+    "Ab:maj", circshift(major_chord, 8),
+    "C:min", circshift(minor_chord, 0),
+    "Eb:7", circshift(seventh_chord, 3),
+    "Eb:maj", circshift(major_chord, 3),
+    "G:min", circshift(minor_chord, 7),
+    "Bb:7", circshift(seventh_chord, 10),
+    "Bb:maj", circshift(major_chord, 10),
+    "D:min", circshift(minor_chord, 2),
+    "F:7", circshift(seventh_chord, 5),
+    "F:maj", circshift(major_chord, 5),
+    "A:min", circshift(minor_chord, 9),
+    "C:7", circshift(seventh_chord, 0),
+    "C:maj", circshift(major_chord, 0),
+    "E:min", circshift(minor_chord, 4),
+    "G:7", circshift(seventh_chord, 7),
+    "G:maj", circshift(major_chord, 7),
+    "B:min", circshift(minor_chord, 11),
+    "D:7", circshift(seventh_chord, 2),
+    "D:maj", circshift(major_chord, 2),
+    "F#:min", circshift(minor_chord, 6),
+    "A:7", circshift(seventh_chord, 9),
+    "A:maj", circshift(major_chord, 9),
+    "C#:min", circshift(minor_chord, 1),
+    "E:7", circshift(seventh_chord, 4),
+    "E:maj", circshift(major_chord, 4),
+    "G#:min", circshift(minor_chord, 8),
+    "B:7", circshift(seventh_chord, 11),
+    "B:maj", circshift(major_chord, 11),
+    "D#:min", circshift(minor_chord, 3)
+  )
+
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+herbiehancock <-
+  get_tidy_audio_analysis('4Ce66JznW8QbeyTdSzdGwR') |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+herbiehancock |> 
+  compmus_match_pitch_template(
+    key_templates,         
+    method = "euclidean",  
+    norm = "manhattan"     
+  ) |>
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "")
+```
+
+### Frank Sinatra
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
+minor_chord <-
+  c(   1,    0,    0,    1,    0,    0,    0,    1,    0,    0,    0,    0)
+seventh_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0)
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:7", circshift(seventh_chord, 6),
+    "Gb:maj", circshift(major_chord, 6),
+    "Bb:min", circshift(minor_chord, 10),
+    "Db:maj", circshift(major_chord, 1),
+    "F:min", circshift(minor_chord, 5),
+    "Ab:7", circshift(seventh_chord, 8),
+    "Ab:maj", circshift(major_chord, 8),
+    "C:min", circshift(minor_chord, 0),
+    "Eb:7", circshift(seventh_chord, 3),
+    "Eb:maj", circshift(major_chord, 3),
+    "G:min", circshift(minor_chord, 7),
+    "Bb:7", circshift(seventh_chord, 10),
+    "Bb:maj", circshift(major_chord, 10),
+    "D:min", circshift(minor_chord, 2),
+    "F:7", circshift(seventh_chord, 5),
+    "F:maj", circshift(major_chord, 5),
+    "A:min", circshift(minor_chord, 9),
+    "C:7", circshift(seventh_chord, 0),
+    "C:maj", circshift(major_chord, 0),
+    "E:min", circshift(minor_chord, 4),
+    "G:7", circshift(seventh_chord, 7),
+    "G:maj", circshift(major_chord, 7),
+    "B:min", circshift(minor_chord, 11),
+    "D:7", circshift(seventh_chord, 2),
+    "D:maj", circshift(major_chord, 2),
+    "F#:min", circshift(minor_chord, 6),
+    "A:7", circshift(seventh_chord, 9),
+    "A:maj", circshift(major_chord, 9),
+    "C#:min", circshift(minor_chord, 1),
+    "E:7", circshift(seventh_chord, 4),
+    "E:maj", circshift(major_chord, 4),
+    "G#:min", circshift(minor_chord, 8),
+    "B:7", circshift(seventh_chord, 11),
+    "B:maj", circshift(major_chord, 11),
+    "D#:min", circshift(minor_chord, 3)
+  )
+
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+franksinatra <-
+  get_tidy_audio_analysis('4beDjVImBfBTSaFM7dKNEy') |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+franksinatra |> 
+  compmus_match_pitch_template(
+    key_templates,         
+    method = "euclidean",  
+    norm = "manhattan"     
+  ) |>
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "")
+```
+
+### Nina Simone 
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
+minor_chord <-
+  c(   1,    0,    0,    1,    0,    0,    0,    1,    0,    0,    0,    0)
+seventh_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0)
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:7", circshift(seventh_chord, 6),
+    "Gb:maj", circshift(major_chord, 6),
+    "Bb:min", circshift(minor_chord, 10),
+    "Db:maj", circshift(major_chord, 1),
+    "F:min", circshift(minor_chord, 5),
+    "Ab:7", circshift(seventh_chord, 8),
+    "Ab:maj", circshift(major_chord, 8),
+    "C:min", circshift(minor_chord, 0),
+    "Eb:7", circshift(seventh_chord, 3),
+    "Eb:maj", circshift(major_chord, 3),
+    "G:min", circshift(minor_chord, 7),
+    "Bb:7", circshift(seventh_chord, 10),
+    "Bb:maj", circshift(major_chord, 10),
+    "D:min", circshift(minor_chord, 2),
+    "F:7", circshift(seventh_chord, 5),
+    "F:maj", circshift(major_chord, 5),
+    "A:min", circshift(minor_chord, 9),
+    "C:7", circshift(seventh_chord, 0),
+    "C:maj", circshift(major_chord, 0),
+    "E:min", circshift(minor_chord, 4),
+    "G:7", circshift(seventh_chord, 7),
+    "G:maj", circshift(major_chord, 7),
+    "B:min", circshift(minor_chord, 11),
+    "D:7", circshift(seventh_chord, 2),
+    "D:maj", circshift(major_chord, 2),
+    "F#:min", circshift(minor_chord, 6),
+    "A:7", circshift(seventh_chord, 9),
+    "A:maj", circshift(major_chord, 9),
+    "C#:min", circshift(minor_chord, 1),
+    "E:7", circshift(seventh_chord, 4),
+    "E:maj", circshift(major_chord, 4),
+    "G#:min", circshift(minor_chord, 8),
+    "B:7", circshift(seventh_chord, 11),
+    "B:maj", circshift(major_chord, 11),
+    "D#:min", circshift(minor_chord, 3)
+  )
+
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+ninasimone <-
+  get_tidy_audio_analysis("6Rqn2GFlmvmV4w9Ala0I1e") |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+ninasimone |> 
+  compmus_match_pitch_template(
+    key_templates,         
+    method = "euclidean",  
+    norm = "manhattan"     
+  ) |>
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "")
+```
+
+
+### Blossom Dearie
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(compmus)
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    0,    0)
+minor_chord <-
+  c(   1,    0,    0,    1,    0,    0,    0,    1,    0,    0,    0,    0)
+seventh_chord <-
+  c(   1,    0,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0)
+
+major_key <-
+  c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+  c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:7", circshift(seventh_chord, 6),
+    "Gb:maj", circshift(major_chord, 6),
+    "Bb:min", circshift(minor_chord, 10),
+    "Db:maj", circshift(major_chord, 1),
+    "F:min", circshift(minor_chord, 5),
+    "Ab:7", circshift(seventh_chord, 8),
+    "Ab:maj", circshift(major_chord, 8),
+    "C:min", circshift(minor_chord, 0),
+    "Eb:7", circshift(seventh_chord, 3),
+    "Eb:maj", circshift(major_chord, 3),
+    "G:min", circshift(minor_chord, 7),
+    "Bb:7", circshift(seventh_chord, 10),
+    "Bb:maj", circshift(major_chord, 10),
+    "D:min", circshift(minor_chord, 2),
+    "F:7", circshift(seventh_chord, 5),
+    "F:maj", circshift(major_chord, 5),
+    "A:min", circshift(minor_chord, 9),
+    "C:7", circshift(seventh_chord, 0),
+    "C:maj", circshift(major_chord, 0),
+    "E:min", circshift(minor_chord, 4),
+    "G:7", circshift(seventh_chord, 7),
+    "G:maj", circshift(major_chord, 7),
+    "B:min", circshift(minor_chord, 11),
+    "D:7", circshift(seventh_chord, 2),
+    "D:maj", circshift(major_chord, 2),
+    "F#:min", circshift(minor_chord, 6),
+    "A:7", circshift(seventh_chord, 9),
+    "A:maj", circshift(major_chord, 9),
+    "C#:min", circshift(minor_chord, 1),
+    "E:7", circshift(seventh_chord, 4),
+    "E:maj", circshift(major_chord, 4),
+    "G#:min", circshift(minor_chord, 8),
+    "B:7", circshift(seventh_chord, 11),
+    "B:maj", circshift(major_chord, 11),
+    "D#:min", circshift(minor_chord, 3)
+  )
+
+key_templates <-
+  tribble(
+    ~name, ~template,
+    "Gb:maj", circshift(major_key, 6),
+    "Bb:min", circshift(minor_key, 10),
+    "Db:maj", circshift(major_key, 1),
+    "F:min", circshift(minor_key, 5),
+    "Ab:maj", circshift(major_key, 8),
+    "C:min", circshift(minor_key, 0),
+    "Eb:maj", circshift(major_key, 3),
+    "G:min", circshift(minor_key, 7),
+    "Bb:maj", circshift(major_key, 10),
+    "D:min", circshift(minor_key, 2),
+    "F:maj", circshift(major_key, 5),
+    "A:min", circshift(minor_key, 9),
+    "C:maj", circshift(major_key, 0),
+    "E:min", circshift(minor_key, 4),
+    "G:maj", circshift(major_key, 7),
+    "B:min", circshift(minor_key, 11),
+    "D:maj", circshift(major_key, 2),
+    "F#:min", circshift(minor_key, 6),
+    "A:maj", circshift(major_key, 9),
+    "C#:min", circshift(minor_key, 1),
+    "E:maj", circshift(major_key, 4),
+    "G#:min", circshift(minor_key, 8),
+    "B:maj", circshift(major_key, 11),
+    "D#:min", circshift(minor_key, 3)
+  )
+
+blossomdearie <-
+  get_tidy_audio_analysis("7spdOASg2r8uR473H5zLXV") |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+blossomdearie |> 
+  compmus_match_pitch_template(
+    key_templates,         
+    method = "euclidean",  
+    norm = "manhattan"     
+  ) |>
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "")
+```
+
+# The finale 
+
+Let's give a round of applause to all of the musicians in today's jazz performance! Overall, I learned a lot from my corpus. As my interest for jazz continues to stay on the rise, it is really fascinating looking at the specific sound of different musicians and seeing how they compare. Geography is a big factor in jazz, which is why I correlated it with ethnicity and race. The black musicians tend to include a deeper more powerful/loud sound, yet more valient as their music is happier and energetic, as many of the visualizations emphasized the instruments used. Frank Sinatra and Blossom Dearie tend to relate more toward today's western music within the jazz genre as it is reflected in the visualizations that there is more structure throughout their songs. Between sound, loudness, timbre, chroma, and key, there was so much to dissect from my corpus. I decided not to use clustering as I worked with all of each artist's discography rather than a particular album, and therefore is was too large of a dataset. Thank you for looking through my portfolio and I hope you greatly enjoy!
